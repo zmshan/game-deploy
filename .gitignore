@@ -8,8 +8,8 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-# dist        # 注释掉或删除这行
-# dist-ssr    # 注释掉或删除这行
+dist        # 注释掉或删除这行
+dist-ssr    # 注释掉或删除这行
 *.local
 
 # Editor directories and files
