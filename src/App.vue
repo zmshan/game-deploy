@@ -3,6 +3,8 @@ import SnakeGame from './components/SnakeGame.vue'
 import SlotMachine from './components/SlotMachine.vue'
 import Tetris from './components/Tetris.vue'
 import FlappyBird from './components/FlappyBird.vue'
+import BoneChickenTiger from './components/BoneChickenTiger.vue'
+import GourdDoll from './components/GourdDoll.vue'
 import { ref } from 'vue'
 import 'element-plus/dist/index.css'
 
@@ -16,10 +18,15 @@ const currentGame = ref('snake')
       <button :class="{ active: currentGame === 'slot' }" @click="currentGame = 'slot'">老虎机</button>
       <button :class="{ active: currentGame === 'tetris' }" @click="currentGame = 'tetris'">俄罗斯方块</button>
       <button :class="{ active: currentGame === 'flappy' }" @click="currentGame = 'flappy'">Flappy Bird</button>
+      <button :class="{ active: currentGame === 'bct' }" @click="currentGame = 'bct'">棒子鸡子老虎</button>
+      <button :class="{ active: currentGame === 'gourd' }" @click="currentGame = 'gourd'">葫芦娃</button>
     </div>
 
-    <component
-      :is="currentGame === 'snake' ? SnakeGame : (currentGame === 'slot' ? SlotMachine : (currentGame === 'tetris' ? Tetris : FlappyBird))" />
+    <component :is="currentGame === 'snake' ? SnakeGame :
+      (currentGame === 'slot' ? SlotMachine :
+        (currentGame === 'tetris' ? Tetris :
+          (currentGame === 'flappy' ? FlappyBird :
+            (currentGame === 'bct' ? BoneChickenTiger : GourdDoll))))" />
   </div>
 </template>
 
