@@ -13,6 +13,7 @@ const currentGame = ref('snake')
 const menuState = ref('expanded') // 'expanded', 'collapsed', 'hidden'
 const menuOpacity = ref(1)
 const allElementsVisible = ref(true) // 控制所有界面元素的显示状态
+const isFullscreen = ref(false) // 控制全屏模式
 let inactivityTimer
 
 // 菜单拖拽相关状态
@@ -289,7 +290,47 @@ onMounted(() => {
     endMenuDrag()
     endGamePanelDrag()
   })
+
+  // 添加ESC键监听
+  window.addEventListener('keydown', handleKeyDown)
 })
+
+// 切换全屏模式
+const toggleFullscreen = () => {
+  isFullscreen.value = !isFullscreen.value
+
+  if (isFullscreen.value) {
+    // 进入全屏模式时，可以尝试调用浏览器的全屏API
+    const docElm = document.documentElement
+    if (docElm.requestFullscreen) {
+      docElm.requestFullscreen()
+    } else if (docElm.mozRequestFullScreen) { // Firefox
+      docElm.mozRequestFullScreen()
+    } else if (docElm.webkitRequestFullscreen) { // Chrome, Safari
+      docElm.webkitRequestFullscreen()
+    } else if (docElm.msRequestFullscreen) { // IE/Edge
+      docElm.msRequestFullscreen()
+    }
+  } else {
+    // 退出全屏模式
+    if (document.exitFullscreen) {
+      document.exitFullscreen()
+    } else if (document.mozCancelFullScreen) { // Firefox
+      document.mozCancelFullScreen()
+    } else if (document.webkitExitFullscreen) { // Chrome, Safari
+      document.webkitExitFullscreen()
+    } else if (document.msExitFullscreen) { // IE/Edge
+      document.msExitFullscreen()
+    }
+  }
+}
+
+// 监听ESC键退出全屏
+const handleKeyDown = (event) => {
+  if (event.key === 'Escape' && isFullscreen.value) {
+    isFullscreen.value = false
+  }
+}
 
 onUnmounted(() => {
   if (inactivityTimer) clearTimeout(inactivityTimer)
@@ -298,14 +339,20 @@ onUnmounted(() => {
   window.removeEventListener('mousemove', onGamePanelDrag)
   window.removeEventListener('mouseup', endMenuDrag)
   window.removeEventListener('mouseup', endGamePanelDrag)
+  window.removeEventListener('keydown', handleKeyDown)
 })
 </script>
 
 <template>
-  <div class="game-container" :class="{ 'all-hidden': !allElementsVisible }">
+  <div class="game-container" :class="{ 'all-hidden': !allElementsVisible, 'fullscreen-mode': isFullscreen }">
     <!-- 一键隐藏/显示按钮 -->
     <div class="global-toggle" @click="allElementsVisible = !allElementsVisible">
       {{ allElementsVisible ? '隐藏' : '显示' }}
+    </div>
+
+    <!-- 沉浸模式按钮 -->
+    <div class="immersive-toggle" @click="toggleFullscreen">
+      {{ isFullscreen ? '退出全屏' : '沉浸模式' }}
     </div>
     <!-- 菜单拖拽区域 -->
     <div class="menu-toggle" @click="toggleMenu" @mouseover="resetInactivityTimer">
@@ -374,8 +421,22 @@ onUnmounted(() => {
 /* 全局隐藏样式 */
 .all-hidden .game-selector,
 .all-hidden .menu-toggle,
-.all-hidden .resize-handle {
+.all-hidden .resize-handle,
+.all-hidden .immersive-toggle,
+.all-hidden .game-panel {
   display: none !important;
+}
+
+/* 全屏模式样式 */
+.fullscreen-mode .game-panel {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 1000 !important;
+  transform: none !important;
+  border-radius: 0 !important;
 }
 
 /* 一键隐藏/显示按钮样式 */
@@ -404,6 +465,31 @@ onUnmounted(() => {
   transform: scale(1.1);
 }
 
+/* 沉浸模式按钮样式 */
+.immersive-toggle {
+  position: fixed;
+  top: 10px;
+  right: 60px;
+  background: rgba(33, 150, 243, 0.8);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  z-index: 100;
+  font-size: 12px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.immersive-toggle:hover {
+  background: rgba(33, 150, 243, 1);
+  transform: scale(1.05);
+}
+
 #app {
   font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -411,15 +497,22 @@ onUnmounted(() => {
   margin: 0;
   padding: 20px;
   box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .game-container {
   width: 100%;
   height: 100vh;
-  padding: 20px;
+  padding: 0;
+  margin: 0;
   display: flex;
   position: relative;
   overflow: hidden;
+  /* background-color: aqua; */
+  box-sizing: border-box;
 }
 
 .menu-toggle {
@@ -551,7 +644,7 @@ onUnmounted(() => {
 
 /* 游戏面板样式 */
 .game-panel {
-  background: white;
+  background: rgb(66, 63, 63);
   border-radius: 8px;
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
   overflow: hidden;
