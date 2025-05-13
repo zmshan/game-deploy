@@ -258,6 +258,7 @@ const handlePieceClick = (cell) => {
           setTimeout(() => cellElement.classList.remove('shake'), 500)
         }
       }
+
     } else {
       // 错误移动提示
       ElMessage.error('不能移动到该位置！')
