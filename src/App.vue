@@ -6,9 +6,9 @@ import FlappyBird from './components/FlappyBird.vue'
 import BoneChickenTiger from './components/BoneChickenTiger.vue'
 import GourdDoll from './components/GourdDoll.vue'
 import Gobang from './components/Gobang.vue'
+import Go from './components/Go.vue'
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import 'element-plus/dist/index.css'
-
 const currentGame = ref('snake')
 const menuState = ref('expanded') // 'expanded', 'collapsed', 'hidden'
 const menuOpacity = ref(1)
@@ -69,6 +69,25 @@ const menuStyle = computed(() => {
   }
 
   return style
+})
+
+// 计算游戏面板缩放比例
+const panelScale = computed(() => {
+  // 基准尺寸为800x600，计算当前尺寸与基准尺寸的比例
+  let widthRatio, heightRatio
+
+  if (isFullscreen.value) {
+    // 全屏模式下使用窗口尺寸
+    widthRatio = window.innerWidth / 800
+    heightRatio = window.innerHeight / 600
+  } else {
+    // 非全屏模式使用面板尺寸
+    widthRatio = gamePanel.width / 800
+    heightRatio = gamePanel.height / 600
+  }
+
+  // 取较小的比例，确保内容完全显示
+  return Math.min(widthRatio, heightRatio)
 })
 
 // 计算游戏面板样式
@@ -293,6 +312,12 @@ onMounted(() => {
 
   // 添加ESC键监听
   window.addEventListener('keydown', handleKeyDown)
+
+  // 添加窗口大小变化监听，确保缩放比例正确更新
+  window.addEventListener('resize', () => {
+    // 窗口大小变化时，如果在全屏模式下，需要重新计算缩放比例
+    // panelScale计算属性会自动重新计算
+  })
 })
 
 // 切换全屏模式
@@ -340,6 +365,7 @@ onUnmounted(() => {
   window.removeEventListener('mouseup', endMenuDrag)
   window.removeEventListener('mouseup', endGamePanelDrag)
   window.removeEventListener('keydown', handleKeyDown)
+  window.removeEventListener('resize', () => { })
 })
 </script>
 
@@ -388,16 +414,23 @@ onUnmounted(() => {
       <button :class="{ active: currentGame === 'gobang' }" @click="currentGame = 'gobang'">
         ⭕ <span class="game-text">五子棋</span>
       </button>
+      <button :class="{ active: currentGame === 'go' }" @click="currentGame = 'go'">
+        🎮 <span class="game-text">围棋</span>
+      </button>
     </div>
 
     <!-- 游戏面板区域 -->
     <div class="game-panel" :style="gamePanelStyle" @mousedown="startGamePanelLongPress" @dblclick="unlockGamePanel">
-      <component :is="currentGame === 'snake' ? SnakeGame :
-        (currentGame === 'slot' ? SlotMachine :
-          (currentGame === 'tetris' ? Tetris :
-            (currentGame === 'flappy' ? FlappyBird :
-              (currentGame === 'bct' ? BoneChickenTiger :
-                (currentGame === 'gourd' ? GourdDoll : Gobang)))))" />
+      <div class="game-content"
+        :style="{ transform: `scale(${panelScale})`, transformOrigin: 'center center', width: '800px', height: '600px' }">
+        <component :is="currentGame === 'snake' ? SnakeGame :
+          (currentGame === 'slot' ? SlotMachine :
+            (currentGame === 'tetris' ? Tetris :
+              (currentGame === 'flappy' ? FlappyBird :
+                (currentGame === 'bct' ? BoneChickenTiger :
+                  (currentGame === 'gourd' ? GourdDoll :
+                    (currentGame === 'gobang' ? Gobang : Go))))))" />
+      </div>
 
       <!-- 调整大小的手柄，仅在锁定状态显示 -->
       <template v-if="gamePanel.isLocked">
@@ -437,6 +470,14 @@ onUnmounted(() => {
   z-index: 1000 !important;
   transform: none !important;
   border-radius: 0 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+/* 确保全屏模式下内容也能正确缩放 */
+.fullscreen-mode .game-content {
+  transform-origin: center center !important;
 }
 
 /* 一键隐藏/显示按钮样式 */
@@ -649,6 +690,16 @@ onUnmounted(() => {
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 游戏内容容器样式 */
+.game-content {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease;
 }
 
 /* 调整大小的手柄 */
